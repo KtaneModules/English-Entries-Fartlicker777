@@ -62,7 +62,7 @@ public class EnglishEntries : MonoBehaviour {
       if (curTime.Month == 6 && (curTime.Day == 11 || curTime.Day == 15)) {
         Ann = 4;
       }
-      Debug.LogFormat("[English Entries #{0}] The phrase is {1}. This is from the episode {2}.", moduleId, LoudClapping[Ann][Kevin], LogTitle[Ann]);
+      Debug.LogFormat("[English Entries #{0}] The phrase is {1}. This is from the episode {2}.", moduleId, LoudClapping[Ann][Kevin].Replace("\n"," "), LogTitle[Ann]);
       Gary.text = LoudClapping[Ann][Kevin];
       ThatWasGreat[0] = (Ann * 3) + Need;
       for (int i = 1; i < 8; i++) {
@@ -70,7 +70,7 @@ public class EnglishEntries : MonoBehaviour {
         while (ThatWasGreat[i] == Ann) {
           ThatWasGreat[i] = UnityEngine.Random.Range(0,LoudClapping.Count());
         }
-        ThatWasGreat[i] = ThatWasGreat[i] * 3 + UnityEngine.Random.Range(0,2);
+        ThatWasGreat[i] = ThatWasGreat[i] * 3 + UnityEngine.Random.Range(0,3);
       }
       for (int i = 1; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -81,7 +81,11 @@ public class EnglishEntries : MonoBehaviour {
             }
           }
         }
+        while (ThatWasGreat[i] / 3 == ThatWasGreat[0] / 3) {
+          ThatWasGreat[i] = UnityEngine.Random.Range(0,LoudClapping.Count()) * 3 + UnityEngine.Random.Range(0,3);
+        }
       }
+
       ThatWasGreat.Shuffle();
     }
     void JoonPress(){
@@ -94,7 +98,7 @@ public class EnglishEntries : MonoBehaviour {
       }
       else {
         GetComponent<KMBombModule>().HandleStrike();
-        Debug.LogFormat("[English Entries #{0}] You submitted the incorrect frame, strike. Kevin walks in on Ann playing the stringy paddle. She is no virtuoso. Kevin makes light of the fact by asking when her concert is. She replies with great sarcasm that it's 4 days away. Kevin is confused. Ever since that last binge, his short term memory has been shaken. He cannot remember what day it is, who he is talking to, or why. He suddenly regains consciousness, and tells Ann that it's Friday. She agrees out of a fear of being wrong. She is possibly more confused than him. She asks if he can come to her concert. She has a string she'd like to wrap around his neck, but she doesn't tell him this. He replies, sarcastically, that he'd love to. Even with the memory loss, he knows he would be stepping into a death trap. The tension is so thick, you could cut it, but only if you had a diamond blade saw, or the jaws of life.", moduleId);
+        Debug.LogFormat("[English Entries #{0}] You submitted the incorrect frame, strike. Kevin walks in on Ann playing the stringy paddle. She is no virtuoso. Kevin makes light of the fact by asking when her concert is. She replies with great sarcasm that it's 4 days away. Kevin is confused. Ever since that last binge, his short term memory has been shaken. He cannot remember what day it is, who he is talking to, or why. He suddenly regains consciousness, and tells Ann that it's Friday. She agrees out of a fear of being wrong. She is possibly more confused than him. She asks if he can come to her concert. She has a string she'd like to wrap around his neck, but she doesn't tell him this. He replies, sarcastically, that he'd love to. Even with the memory loss, he knows he would be stepping into a death trap. The tension is so thick, you could cut it, but only if you had a diamond blade saw, or the jaws of life. For reference, that is picture {1}.", moduleId, ThatWasGreat[Sure]);
         Audio.PlaySoundAtTransform("AwesomeViolin", transform);
       }
     }
@@ -111,10 +115,10 @@ public class EnglishEntries : MonoBehaviour {
       }
     }
     void TodayPress(KMSelectable Today) {
-      if (Today == JuneEleventh[0]) {
+      if (Today == JuneEleventh[0] && SingleNote == 1) {
         StartCoroutine(MMMMMMMMMMMMM());
       }
-      else if (Today == JuneEleventh[1]) {
+      else if (Today == JuneEleventh[1] && SingleNote == 1) {
         StartCoroutine(MMMMMMMMMMMMMM());
       }
     }
@@ -127,7 +131,8 @@ public class EnglishEntries : MonoBehaviour {
         Jinho.GetComponent<MeshRenderer>().material = Color[0];
         Gary.text = LoudClapping[Ann][Kevin];
       }
-      else if (SingleNote == 2) {
+      else if (SingleNote == 2 && moduleSolved == false) {
+        moduleSolved = true;
         GetComponent<KMBombModule>().HandlePass();
         SingleNote = 2;
         Jinho.GetComponent<MeshRenderer>().material = Color[1];
@@ -158,6 +163,62 @@ public class EnglishEntries : MonoBehaviour {
       }
       else {
         Sure += 1;
+      }
+    }
+    //I add the twitch play
+    #pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} VOL up/down to interact with the volume buttons, CH up/down to change the channel, and Submit to submit the current frame.";
+    #pragma warning restore 414
+
+    IEnumerator ProcessTwitchCommand(string command){
+      if (Regex.IsMatch(command, @"^\s*Submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) {
+        yield return null;
+        JoonPress();
+        yield break;
+      }
+      command = command.Trim();
+      string[] parameters = command.Split(' ');
+        if (parameters.Length > 2) {
+          yield return null;
+          yield return "sendtochaterror Too many words";
+          yield break;
+        }
+        else if (parameters.Length == 2) {
+          yield return null;
+          if (parameters[0].ToUpper() == "VOL") {
+            if (parameters[1].ToLower() == "up") {
+              JuneFifteenth[1].OnInteract();
+            }
+            else if (parameters[1].ToLower() == "down") {
+              JuneFifteenth[0].OnInteract();
+            }
+            else {
+              yield return "sendtochaterror Invalid command.";
+              yield break;
+            }
+          }
+          else if (parameters[0].ToUpper() == "CH") {
+            if (parameters[1].ToLower() == "up") {
+              JuneEleventh[1].OnInteract();
+            }
+            else if (parameters[1].ToLower() == "down") {
+              JuneEleventh[0].OnInteract();
+            }
+            else {
+              yield return "sendtochaterror Invalid command.";
+              yield break;
+            }
+          }
+          else {
+            yield return "sendtochaterror Invalid command.";
+            yield break;
+          }
+        yield break;
+      }
+      else if (parameters.Length < 2) {
+        yield return null;
+        yield return "sendtochaterror Not enough commands";
+        yield break;
       }
     }
 }
