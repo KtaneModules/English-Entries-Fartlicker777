@@ -75,10 +75,10 @@ public class EnglishEntries : MonoBehaviour {
     }
 
     void Start() {
-      Ann = (UnityEngine.Random.Range(0,LoudClapping.Count()));
+      Ann = UnityEngine.Random.Range(0,LoudClapping.Count());
       Kevin = UnityEngine.Random.Range(0,LoudClapping[Ann].Count());
-      Need = UnityEngine.Random.Range(0,2);
-      System.DateTime curTime = System.DateTime.Now;
+      Need = UnityEngine.Random.Range(0,3);
+      DateTime curTime = DateTime.Now;
       if (curTime.Month == 6 && (curTime.Day == 11 || curTime.Day == 15)) {
         Ann = 4;
       }
@@ -87,7 +87,7 @@ public class EnglishEntries : MonoBehaviour {
       ThatWasGreat[0] = (Ann * 3) + Need;
       for (int i = 1; i < 8; i++) {
         ThatWasGreat[i] = UnityEngine.Random.Range(0,LoudClapping.Count());
-        while (ThatWasGreat[i] == Ann) {
+        while (ThatWasGreat[i] / 3 == Ann) {
           ThatWasGreat[i] = UnityEngine.Random.Range(0,LoudClapping.Count());
         }
         ThatWasGreat[i] = ThatWasGreat[i] * 3 + UnityEngine.Random.Range(0,3);
@@ -113,8 +113,11 @@ public class EnglishEntries : MonoBehaviour {
       Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, Joon.transform);
       if (ThatWasGreat[Sure] == (Ann * 3) + Need) {
         Audio.PlaySoundAtTransform("YouAreGreat", transform);
-        SingleNote = 2;
-        Debug.LogFormat("[English Entries #{0}] You submitted the correct frame, module disarmed. You are great!", moduleId);
+        if (SingleNote != 2)
+        {
+          SingleNote = 2;
+          Debug.LogFormat("[English Entries #{0}] You submitted the correct frame, module disarmed. You are great!", moduleId);
+        }
       }
       else {
         GetComponent<KMBombModule>().HandleStrike();
@@ -185,11 +188,11 @@ public class EnglishEntries : MonoBehaviour {
         Sure += 1;
       }
     }
+
     //I add the twitch play
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} VOL up/down to interact with the volume buttons, CH up/down to change the channel, and Submit to submit the current frame.";
+    private readonly string TwitchHelpMessage = @"!{0} VOL up/down to interact with the volume buttons, !{0} CH up/down to change the channel, and !{0} Submit to submit the current frame.";
     #pragma warning restore 414
-
     IEnumerator ProcessTwitchCommand(string command){
       if (Regex.IsMatch(command, @"^\s*Submit\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)) {
         yield return null;
@@ -240,5 +243,67 @@ public class EnglishEntries : MonoBehaviour {
         yield return "sendtochaterror Not enough commands";
         yield break;
       }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        if (ThatWasGreat[Sure] == (Ann * 3) + Need)
+        {
+            Joon.OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        else
+        {
+            if (SingleNote != 1)
+            {
+                JuneFifteenth[1].OnInteract();
+                yield return new WaitForSeconds(0.1f);
+            }
+            int ct = Sure;
+            int ct2 = Sure;
+            int[] counts = new int[2];
+            while (ct != Array.IndexOf(ThatWasGreat, (Ann * 3) + Need))
+            {
+                ct++;
+                if (ct > 7)
+                    ct = 0;
+                counts[1]++;
+            }
+            while (ct2 != Array.IndexOf(ThatWasGreat, (Ann * 3) + Need))
+            {
+                ct2--;
+                if (ct2 < 0)
+                    ct2 = 7;
+                counts[0]++;
+            }
+            if (counts[0] > counts[1])
+            {
+                for (int i = 0; i < counts[1]; i++)
+                {
+                    JuneEleventh[1].OnInteract();
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+            else if (counts[0] < counts[1])
+            {
+                for (int i = 0; i < counts[0]; i++)
+                {
+                    JuneEleventh[0].OnInteract();
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+            else
+            {
+                int rand = UnityEngine.Random.Range(0, 2);
+                for (int i = 0; i < counts[rand]; i++)
+                {
+                    JuneEleventh[rand].OnInteract();
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+            while (ThatWasGreat[Sure] != (Ann * 3) + Need) { yield return null; }
+            Joon.OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 }
